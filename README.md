@@ -116,3 +116,4 @@ end
 ## TODOs
 
 * Update DSL to look more like `fab_deploy.crontab` (e.g. `crontab.add_line`)
+* Add bulk line changes
