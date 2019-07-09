@@ -1,5 +1,20 @@
+require "tempfile"
+require "securerandom"
+
 module Capistrano
   module DSL
+    module Crontab
+      @@tmp_dir = nil
+
+      def self.tmp_dir(f = nil)
+        if !f.nil?
+          @@tmp_dir = f
+        else
+          @@tmp_dir
+        end
+      end
+    end
+
     def crontab_get_content
       capture(:crontab, "-l")
     end
@@ -9,11 +24,16 @@ module Capistrano
       tempfile.write("#{content}\n")
       tempfile.close
 
+      tmp_upload_file = tempfile.path
+      if !Capistrano::DSL::Crontab.tmp_dir.nil?
+        tmp_upload_file = File.join(Capistrano::DSL::Crontab.tmp_dir, SecureRandom.hex)
+      end
+
       begin
-        upload!(tempfile.path, tempfile.path)
-        execute(:crontab, tempfile.path)
+        upload!(tempfile.path, tmp_upload_file)
+        execute(:crontab, tmp_upload_file)
       ensure
-        execute(:rm, "-f", tempfile.path)
+        execute(:rm, "-f", tmp_upload_file)
         tempfile.unlink
       end
     end
@@ -41,6 +61,8 @@ module Capistrano
       crontab_remove_line(marker)
       crontab_add_line(content, marker)
     end
+
+    private
 
     def crontab_marker(marker = nil)
       marker.nil? ? "" : " # MARKER:%s" % [marker]

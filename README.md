@@ -40,6 +40,16 @@ require "capistrano/crontab"
 
 ```ruby
 on roles(:all) do
+
+  # The temporary Crontab file is uploaded to the /tmp folder.
+  # Not all users have permission to write to /tmp. You can
+  # override the location.
+
+  set :deploy_user, "deploy"
+  set :tmp_dir, ->{ File.join('home', fetch(:deploy_user), 'tmp') }
+  Capistrano::DSL::Crontab.tmp_dir(fetch(:tmp_dir))
+
+
   # output the content of your crontab using `puts`
   crontab_puts_content
 
